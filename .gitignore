@@ -216,3 +216,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local API/config files
+.env.local
+*.key
+
+# Generated experiment outputs
+traces/
+results/*.csv
+results/*.json
+results/*.tmp
+
+# Keep sample outputs only
+!examples/
+!examples/sample_results.csv
+!examples/sample_trace.json
