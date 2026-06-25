@@ -227,11 +227,12 @@ results/*.csv
 results/*.json
 results/*.tmp
 results/*.md
+!results/.gitkeep
 
 # Keep sample outputs only
 !examples/
 !examples/sample_results.csv
-!examples/sample_trace.json
+!examples/sample_trace_summary.json
 
 # Local run workspaces
 runs/

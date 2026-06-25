@@ -223,12 +223,13 @@ A summarized trace example is provided in:
 examples/sample_trace_summary.json
 ```
 
-A human-readable summary generated from the sample results is provided in：
+A human-readable summary generated from the sample results is provided in:
+
 ```text
- examples/sample_summary.md
+examples/sample_summary.md
 ```
 
-The sample outputs were generated from runs using deepseek-v4-flash through an OpenAI-compatible chat completion interface.
+The sample outputs were generated from runs using `deepseek-v4-flash` through an OpenAI-compatible chat completion interface.
 
 In the current sample, the agent:
 
@@ -297,6 +298,7 @@ The following files and directories are generated locally during execution and a
 traces/
 runs/
 results/results.csv
+results/summary.md
 ```
 
 The `examples/` directory contains sanitized sample outputs that can be committed for demonstration purposes.

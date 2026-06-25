@@ -111,7 +111,8 @@ def build_summary(rows, input_path):
     lines = []
     lines.append("# Evaluation Summary")
     lines.append("")
-    lines.append(f"Source file: `{input_path}`")
+    display_input_path = str(input_path).replace("\\", "/")
+    lines.append(f"Source file: `{display_input_path}`")
     lines.append("")
     lines.append("## Overview")
     lines.append("")

@@ -1,6 +1,6 @@
 # Evaluation Summary
 
-Source file: `examples\sample_results.csv`
+Source file: `examples/sample_results.csv`
 
 ## Overview
 
