@@ -230,7 +230,14 @@ def execute_tool_call(tool_call):
 
 def save_trace(task_id, trace):
     TRACE_DIR.mkdir(parents=True, exist_ok=True)
-    trace_path = TRACE_DIR / f"{task_id}_trace.json"
+
+    run_id = trace.get("run_id") or f"{task_id}_{time.strftime('%Y%m%d_%H%M%S')}"
+    trace_path = TRACE_DIR / f"{run_id}_trace.json"
+
+    counter = 2
+    while trace_path.exists():
+        trace_path = TRACE_DIR / f"{run_id}_{counter}_trace.json"
+        counter += 1
 
     with trace_path.open("w", encoding="utf-8") as file:
         json.dump(trace, file, ensure_ascii=False, indent=2)
