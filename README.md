@@ -46,7 +46,9 @@ This project uses a controlled local setting to make these behaviors observable 
 │           └── test_median.py
 ├── examples/
 │   ├── sample_results.csv
-│   └── sample_trace_summary.json
+│   ├── sample_trace_summary.json
+│   ├── sample_failure_analysis.md
+│   └── sample_summary.md
 ├── results/
 ├── traces/
 └── runs/
@@ -219,6 +221,11 @@ A summarized trace example is provided in:
 
 ```text
 examples/sample_trace_summary.json
+```
+
+A human-readable summary generated from the sample results is provided in：
+```text
+ examples/sample_summary.md
 ```
 
 The sample outputs were generated from runs using deepseek-v4-flash through an OpenAI-compatible chat completion interface.

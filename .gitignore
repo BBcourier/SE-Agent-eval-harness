@@ -226,6 +226,7 @@ traces/
 results/*.csv
 results/*.json
 results/*.tmp
+results/*.md
 
 # Keep sample outputs only
 !examples/
