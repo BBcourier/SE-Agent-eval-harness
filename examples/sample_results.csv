@@ -1,0 +1,2 @@
+task_id,task_type,model,run_id,completed,finalization_used,success_score,final_answer_present,required_files_read,expected_tools_called,self_check_performed,tests_passed_in_trace,workspace_tests_passed,patch_applied,num_steps,num_tool_calls,total_latency_sec,failure_type,short_observation
+bugfix_001,code_debugging,deepseek-v4-flash,bugfix_001_sample,True,True,1.0,True,True,True,True,False,True,True,7,7,27.7841,workspace_passed_but_not_tool_verified,"The workspace passed tests after the run, but the trace did not contain a successful post-fix test result."

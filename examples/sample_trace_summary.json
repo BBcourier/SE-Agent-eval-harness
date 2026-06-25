@@ -1,0 +1,18 @@
+{
+    "task_id": "bugfix_001",
+    "task_type": "code_debugging",
+    "model": "deepseek-v4-flash",
+    "run_id": "bugfix_001_sample",
+    "finalization_used": true,
+    "workspace_tests_passed": true,
+    "tool_sequence": [
+        "read_file",
+        "read_file",
+        "run_tests",
+        "apply_patch_safely",
+        "run_tests"
+    ],
+    "observed_behavior": "The agent inspected the source and test files, identified the even-length median bug, applied a patch in an isolated workspace, and produced a final answer through the finalization step.",
+    "process_observation": "The final workspace passed all tests, but the trace did not contain a successful post-fix test result.",
+    "failure_type": "workspace_passed_but_not_tool_verified"
+}
