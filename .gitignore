@@ -231,3 +231,6 @@ results/*.tmp
 !examples/
 !examples/sample_results.csv
 !examples/sample_trace.json
+
+# Local run workspaces
+runs/

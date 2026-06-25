@@ -1,5 +1,6 @@
 import argparse
 import json
+import shutil
 import time
 from pathlib import Path
 
@@ -10,7 +11,9 @@ from prompts import SYSTEM_PROMPT, build_task_prompt, get_task_by_id, load_tasks
 import tools as local_tools
 
 
-TRACE_DIR = Path("traces")
+PROJECT_ROOT = Path(__file__).resolve().parent
+TRACE_DIR = PROJECT_ROOT / "traces"
+RUN_WORKSPACE_DIR = PROJECT_ROOT / "runs" / "workspaces"
 
 
 TOOL_SCHEMAS = [
@@ -128,6 +131,31 @@ TOOL_FUNCTIONS = {
 }
 
 
+def create_task_workspace(task):
+    source_task_dir = (PROJECT_ROOT / task["task_dir"]).resolve()
+
+    if not source_task_dir.exists():
+        raise FileNotFoundError(f"Task directory does not exist: {task['task_dir']}")
+
+    run_id = f"{task['task_id']}_{time.strftime('%Y%m%d_%H%M%S')}"
+    workspace_path = RUN_WORKSPACE_DIR / run_id
+
+    shutil.copytree(
+        source_task_dir,
+        workspace_path,
+        ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache")
+    )
+
+    workspace_task_dir = str(workspace_path.relative_to(PROJECT_ROOT)).replace("\\", "/")
+
+    runtime_task = dict(task)
+    runtime_task["original_task_dir"] = task["task_dir"]
+    runtime_task["task_dir"] = workspace_task_dir
+    runtime_task["run_id"] = run_id
+
+    return runtime_task
+
+
 def tool_call_to_dict(tool_call):
     if hasattr(tool_call, "model_dump"):
         return tool_call.model_dump(exclude_none=True)
@@ -210,8 +238,50 @@ def save_trace(task_id, trace):
     return trace_path
 
 
+def request_final_answer(client, model, messages):
+    final_prompt = """
+The tool-use step limit has been reached.
+
+Based only on the task prompt and the tool results already available, provide a concise final answer. Do not call or request any more tools.
+
+Include:
+1. the files or evidence inspected;
+2. the issue identified;
+3. the fix applied or recommended;
+4. the verification result;
+5. any remaining uncertainty.
+""".strip()
+
+    final_messages = messages + [
+        {"role": "user", "content": final_prompt}
+    ]
+
+    start_time = time.perf_counter()
+
+    response = client.chat.completions.create(
+        model=model,
+        messages=final_messages,
+    )
+
+    latency_sec = time.perf_counter() - start_time
+    message = response.choices[0].message
+
+    finalization_record = {
+        "step": "finalization",
+        "latency_sec": round(latency_sec, 4),
+        "assistant_message": message_to_dict(message),
+        "tool_results": [],
+    }
+
+    if getattr(response, "usage", None):
+        finalization_record["usage"] = response.usage.model_dump(exclude_none=True)
+
+    return message.content or "", finalization_record
+
+
 def run_agent_on_task(task, max_steps=6):
     config = load_llm_config()
+    runtime_task = create_task_workspace(task)
 
     client = OpenAI(
         api_key=config.api_key,
@@ -220,18 +290,21 @@ def run_agent_on_task(task, max_steps=6):
 
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": build_task_prompt(task)},
+        {"role": "user", "content": build_task_prompt(runtime_task)},
     ]
 
     trace = {
         "task_id": task["task_id"],
         "task_type": task["task_type"],
-        "task_dir": task["task_dir"],
+        "original_task_dir": task["task_dir"],
+        "workspace_task_dir": runtime_task["task_dir"],
+        "run_id": runtime_task["run_id"],
         "model": config.model,
         "max_steps": max_steps,
         "steps": [],
         "final_answer": None,
         "completed": False,
+        "finalization_used": False,
     }
 
     for step_index in range(1, max_steps + 1):
@@ -290,7 +363,16 @@ def run_agent_on_task(task, max_steps=6):
         trace["steps"].append(step_record)
 
     if not trace["completed"]:
-        trace["final_answer"] = "Maximum step limit reached before a final answer was produced."
+        final_answer, finalization_record = request_final_answer(
+            client=client,
+            model=config.model,
+            messages=messages,
+        )
+
+        trace["final_answer"] = final_answer
+        trace["completed"] = bool(final_answer)
+        trace["finalization_used"] = True
+        trace["steps"].append(finalization_record)
 
     trace_path = save_trace(task["task_id"], trace)
 
@@ -298,11 +380,14 @@ def run_agent_on_task(task, max_steps=6):
 
 
 def dry_run(task):
+    runtime_task = dict(task)
+    runtime_task["task_dir"] = f"runs/workspaces/{task['task_id']}_YYYYMMDD_HHMMSS"
+
     print("System prompt:")
     print(SYSTEM_PROMPT)
 
     print("\nTask prompt:")
-    print(build_task_prompt(task))
+    print(build_task_prompt(runtime_task))
 
     print("\nAvailable tools:")
     for tool_schema in TOOL_SCHEMAS:
@@ -338,6 +423,9 @@ def main():
 
         print("\nTrace saved to:")
         print(trace_path)
+
+        print("\nWorkspace used:")
+        print(trace["workspace_task_dir"])
 
 
 if __name__ == "__main__":
