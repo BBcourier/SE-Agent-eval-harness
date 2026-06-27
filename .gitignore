@@ -233,6 +233,8 @@ results/*.md
 !examples/
 !examples/sample_results.csv
 !examples/sample_trace_summary.json
+!examples/sample_failure_analysis.md
+!examples/sample_summary.md
 
 # Local run workspaces
 runs/
